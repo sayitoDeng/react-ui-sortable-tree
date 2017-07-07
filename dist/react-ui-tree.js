@@ -162,7 +162,7 @@ module.exports = React.createClass({
     if (diffY < 0) {
       // up
       var above = tree.getNodeByTop(index.top - 1);
-      newIndex = tree.move(index.id, above.id, 'before');
+      if (above) newIndex = tree.move(index.id, above.id, 'before');
     } else if (diffY > dragging.h) {
       // down
       if (index.next) {
@@ -187,6 +187,8 @@ module.exports = React.createClass({
     if (newIndex) {
       newIndex.node.collapsed = collapsed;
       dragging.id = newIndex.id;
+    } else {
+      e.preventDefault();
     }
 
     this.setState({
