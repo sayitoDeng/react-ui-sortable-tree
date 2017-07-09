@@ -1,7 +1,7 @@
 # react-ui-sortable-tree [![Build Status](https://travis-ci.org/ukrbublik/react-ui-sortable-tree.svg)](https://travis-ci.org/ukrbublik/react-ui-sortable-tree)
 React tree component
 
-Forked from [https://github.com/pqx/react-ui-tree]https://github.com/pqx/react-ui-tree). 
+Forked from [https://github.com/pqx/react-ui-tree](https://github.com/pqx/react-ui-tree). 
 Fully reworked sorting (drag-n-drop) of tree to allow control of drop (see prop `canMoveNode`).
 
 This project was initially developed for a webpage builder. It maintains an internal tree structure within the component through [js-tree](https://github.com/wangzuo/js-tree).
