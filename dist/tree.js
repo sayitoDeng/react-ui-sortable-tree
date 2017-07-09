@@ -1,5 +1,7 @@
 'use strict';
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 var Tree = require('js-tree');
 var proto = Tree.prototype;
 
@@ -27,6 +29,7 @@ proto.updateNodesPosition = function () {
         node.top = top++;
         node.left = left;
       }
+      node.lev = left - 1;
 
       if (node.children && node.children.length) {
         height += walk(node.children, node, left + 1, collapsed || node.node.collapsed);
@@ -41,8 +44,242 @@ proto.updateNodesPosition = function () {
   }
 };
 
+proto._getNodeElById = function (treeEl, indexId) {
+  if (indexId == null) return null;
+  if (!this._cacheEls) this._cacheEls = {};
+  var el = this._cacheEls[indexId];
+  if (el && document.contains(el)) return el;
+  el = treeEl.querySelector('.m-node[data-id="' + indexId + '"]');
+  this._cacheEls[indexId] = el;
+  return el;
+};
+
+proto._getDraggableNodeEl = function (treeEl) {
+  if (!this._cacheEls) this._cacheEls = {};
+  var el = this._cacheEls['draggable'];
+  if (el && document.contains(el)) return el;
+  var els = treeEl.getElementsByClassName('m-draggable');
+  el = els.length ? els[0] : null;
+  this._cacheEls['draggable'] = el;
+  return el;
+};
+
+proto._getPlaceholderNodeEl = function (treeEl) {
+  if (!this._cacheEls) this._cacheEls = {};
+  var el = this._cacheEls['placeholder'];
+  if (el && document.contains(el)) return el;
+  var els = treeEl.getElementsByClassName('placeholder');
+  el = els.length ? els[0] : null;
+  this._cacheEls['placeholder'] = el;
+  return el;
+};
+
+proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
+  var _this = this;
+
+  var newIndex = null;
+  var collapsed = index.node.collapsed;
+  var paddingLeft = dragInfo.paddingLeft;
+
+  var moveInfo = null;
+  var treeEl = dragInfo.treeEl;
+  var dragId = dragInfo.id;
+  var dragEl = this._getDraggableNodeEl(treeEl);
+  var plhEl = this._getPlaceholderNodeEl(treeEl);
+  if (dragEl && plhEl) {
+    var dragRect = dragEl.getBoundingClientRect();
+    var plhRect = plhEl.getBoundingClientRect();
+    var dragDirs = { hrz: 0, vrt: 0 };
+    if (dragRect.top < plhRect.top) dragDirs.vrt = -1; //up
+    else if (dragRect.bottom > plhRect.bottom) dragDirs.vrt = +1; //down
+    if (dragRect.left > plhRect.left) dragDirs.hrz = +1; //right
+    else if (dragRect.left < plhRect.left) dragDirs.hrz = -1; //left
+
+    var treeRect = treeEl.getBoundingClientRect();
+    var trgCoord = {
+      x: treeRect.right - 10,
+      y: dragDirs.vrt >= 0 ? dragRect.bottom : dragRect.top
+    };
+    var hovMnodeEl = document.elementFromPoint(trgCoord.x, trgCoord.y);
+    hovMnodeEl = hovMnodeEl ? hovMnodeEl.closest('.m-node') : null;
+    if (!hovMnodeEl) {
+      //todo: Bug #1: handle "out of tree bounds" problem; scroll tree viewport
+      console.log('out of tree bounds');
+    } else {
+      var hovNodeId = hovMnodeEl.getAttribute('data-id');
+      var hovInnerEls = hovMnodeEl.getElementsByClassName('inner');
+      var hovEl = hovInnerEls.length ? hovInnerEls[0] : null;
+      if (hovEl) {
+        var hovRect = hovEl.getBoundingClientRect();
+        var hovHeight = hovRect.bottom - hovRect.top;
+        var hovIndex = this.getIndex(hovNodeId);
+        var trgRect = null,
+            trgEl = null,
+            trgIndex = null;
+        if (dragDirs.vrt == 0) {
+          trgIndex = index;
+          trgEl = plhEl;
+          if (trgEl) trgRect = trgEl.getBoundingClientRect();
+        } else {
+          var isOverHover = dragDirs.vrt < 0 //up
+          ? hovRect.bottom - dragRect.top > hovHeight / 2 : dragRect.bottom - hovRect.top > hovHeight / 2;
+          if (isOverHover) {
+            trgIndex = hovIndex;
+            trgRect = hovRect;
+            trgEl = hovEl;
+          } else {
+            var trgIndex = dragDirs.vrt <= 0 //up
+            ? this.getNodeByTop(hovIndex.top + 1) //below
+            : this.getNodeByTop(hovIndex.top - 1); //above
+            if (trgIndex) {
+              if (trgIndex.id == dragId) {
+                trgEl = plhEl;
+              } else trgEl = this._getNodeElById(treeEl, trgIndex.id);
+              trgRect = trgEl.getBoundingClientRect();
+            }
+          }
+        }
+        var isSamePos = trgIndex && trgIndex.id == dragId;
+        if (trgRect) {
+          var dragLeftOffset = dragRect.left - treeRect.left;
+          var trgLeftOffset = trgRect.left - treeRect.left;
+          if (isSamePos) {
+            //todo: Bug #2: fix 10px offset in css
+            dragLeftOffset += 10; //fix, see "padding-left: 10px" at css
+          }
+          var trgLev = trgLeftOffset / paddingLeft;
+          var dragLev = Math.max(0, Math.round(dragLeftOffset / paddingLeft));
+          var availMoves = [];
+          if (isSamePos) {
+            //allow to move only left/right
+            var tmp = trgIndex;
+            while (tmp.parent && !tmp.next) {
+              //can prepend to collapsed
+              var par = this.getIndex(tmp.parent);
+              if (par.id != 1) availMoves.push(['after', par, par.lev]);
+              tmp = par;
+            }
+            if (trgIndex.prev) {
+              var tmp = this.getIndex(trgIndex.prev);
+              while (!tmp.node.leaf) {
+                //can append to collapsed if it's visible
+                if (index.parent != tmp.id) availMoves.push(['append', tmp, tmp.lev + 1]);
+                if (!tmp.children || !tmp.children.length || tmp.collapsed) {
+                  break;
+                } else {
+                  var lastChildId = tmp.children[tmp.children.length - 1];
+                  var lastChild = this.getIndex(lastChildId);
+                  tmp = lastChild;
+                }
+              }
+            }
+          } else {
+            //find out where we can move..
+            if (dragDirs.vrt < 0) {
+              availMoves.push(['before', trgIndex, trgIndex.lev]);
+            }
+            if (trgIndex.node.leaf && dragDirs.vrt > 0) {
+              availMoves.push(['after', trgIndex, trgIndex.lev]);
+            }
+            if (!trgIndex.node.leaf && dragDirs.vrt > 0) {
+              //can prepend to collapsed
+              availMoves.push(['prepend', trgIndex, trgIndex.lev + 1]);
+            }
+            if (dragDirs.vrt > 0) {
+              var tmp = trgIndex;
+              while (tmp.parent && !tmp.next) {
+                //can append to collapsed
+                var par = this.getIndex(tmp.parent);
+                availMoves.push(['append', par, par.lev + 1]);
+                tmp = par;
+              }
+            }
+            if (dragDirs.vrt < 0) {
+              if (trgIndex.prev) {
+                var tmp = this.getIndex(trgIndex.prev);
+                while (!tmp.node.leaf) {
+                  //can append to collapsed if it's visible
+                  if (index.parent != tmp.id) availMoves.push(['append', tmp, tmp.lev + 1]);
+                  if (!tmp.children || !tmp.children.length || tmp.collapsed) {
+                    break;
+                  } else {
+                    var lastChildId = tmp.children[tmp.children.length - 1];
+                    var lastChild = this.getIndex(lastChildId);
+                    tmp = lastChild;
+                  }
+                }
+              }
+            }
+          }
+
+          //sanitize
+          availMoves = availMoves.filter(function (am) {
+            var placement = am[0];
+            var trg = am[1];
+            if ((placement == 'before' || placement == 'after') && trg.id == 1) return false;
+
+            var isInside = trg.id == index.id;
+            if (!isInside) {
+              var _tmp = trg;
+              while (_tmp.parent) {
+                _tmp = _this.getIndex(_tmp.parent);
+                if (_tmp.id == index.id) {
+                  isInside = true;
+                  break;
+                }
+              }
+            }
+            return !isInside;
+          });
+
+          var bestMode = null;
+          availMoves = availMoves.filter(function (am) {
+            return _this.canMove(index.id, am[1].id, am[0], canMoveFn);
+          });
+          var levs = availMoves.map(function (am) {
+            return am[2];
+          });
+          var curLev = index.lev;
+          var allLevs = levs.concat(curLev);
+          var closestDragLev = null;
+          if (allLevs.indexOf(dragLev) != -1) closestDragLev = dragLev;else if (dragLev > Math.max.apply(Math, _toConsumableArray(allLevs))) closestDragLev = Math.max.apply(Math, _toConsumableArray(allLevs));else if (dragLev < Math.min.apply(Math, _toConsumableArray(allLevs))) closestDragLev = Math.min.apply(Math, _toConsumableArray(allLevs));
+          bestMode = availMoves.find(function (am) {
+            return am[2] == closestDragLev;
+          });
+          if (!isSamePos && !bestMode && availMoves.length) bestMode = availMoves[0];
+
+          moveInfo = bestMode;
+        }
+      }
+    }
+  }
+
+  if (moveInfo) {
+    console.log('move', index, moveInfo);
+    newIndex = this.move(index.id, moveInfo[1].id, moveInfo[0]);
+  }
+
+  return newIndex;
+};
+
+proto.canMove = function (fromId, toId, placement, canMoveFn) {
+  if (fromId === toId) return false;
+
+  var fromIndex = this.getIndex(fromId);
+  var toIndex = this.getIndex(toId);
+  if (!fromIndex || !toIndex) return false;
+  var toParentIndex = null;
+  if (placement == 'append' || placement == 'prepend') toParentIndex = toIndex;else toParentIndex = this.getIndex(toIndex.parent);
+  if (toParentIndex && toParentIndex.id == 1) toParentIndex = null;
+
+  var res = true;
+  if (canMoveFn) res = canMoveFn(fromIndex.node, toIndex.node, placement, toParentIndex ? toParentIndex.node : null);
+  return res;
+};
+
 proto.move = function (fromId, toId, placement) {
-  if (fromId === toId || toId === 1) return;
+  //if(!this.canMove(fromId, toId, placement))
+  //  return;
 
   var obj = this.remove(fromId);
   var index = null;

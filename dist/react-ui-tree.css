@@ -28,6 +28,10 @@
 }
 .m-node.placeholder {
   border: 1px dashed #ccc;
+  /*margin-left: 10px;*/
+}
+.m-node.placeholder .inner {
+  /*margin-left: 0px;*/
 }
 .m-node .inner {
   position: relative;

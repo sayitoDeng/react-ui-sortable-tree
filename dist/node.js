@@ -66,7 +66,7 @@ var Node = React.createClass({
       'div',
       { className: cx('m-node', {
           'placeholder': index.id === dragging
-        }), style: styles },
+        }), 'data-id': index.id, style: styles },
       React.createElement(
         'div',
         { className: 'inner', ref: 'inner', onMouseDown: this.handleMouseDown },

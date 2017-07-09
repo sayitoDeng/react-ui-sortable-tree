@@ -93,7 +93,8 @@ module.exports = React.createClass({
       w: dom.offsetWidth,
       h: dom.offsetHeight,
       x: dom.offsetLeft,
-      y: dom.offsetTop
+      y: dom.offsetTop,
+      treeEl: dom.closest('.m-tree')
     };
 
     this._startX = dom.offsetLeft;
@@ -101,6 +102,7 @@ module.exports = React.createClass({
     this._offsetX = e.clientX;
     this._offsetY = e.clientY;
     this._start = true;
+    this._changed = false;
 
     window.addEventListener('mousemove', this.drag);
     window.addEventListener('mouseup', this.dragEnd);
@@ -121,6 +123,10 @@ module.exports = React.createClass({
     var paddingLeft = this.props.paddingLeft;
     var newIndex = null;
     var index = tree.getIndex(dragging.id);
+    if (!index) {
+      //todo: see Bug #1
+      return;
+    }
     var collapsed = index.node.collapsed;
 
     var _startX = this._startX;
@@ -134,59 +140,14 @@ module.exports = React.createClass({
     };
     dragging.x = pos.x;
     dragging.y = pos.y;
+    dragging.paddingLeft = paddingLeft;
 
-    var diffX = dragging.x - paddingLeft / 2 - (index.left - 2) * paddingLeft;
-    var diffY = dragging.y - dragging.h / 2 - (index.top - 2) * dragging.h;
-
-    if (diffX < 0) {
-      // left
-      if (index.parent && !index.next) {
-        newIndex = tree.move(index.id, index.parent, 'after');
-      }
-    } else if (diffX > paddingLeft) {
-      // right
-      if (index.prev) {
-        var prevNode = tree.getIndex(index.prev).node;
-        if (!prevNode.collapsed && !prevNode.leaf) {
-          newIndex = tree.move(index.id, index.prev, 'append');
-        }
-      }
-    }
+    newIndex = tree.moveIndex(index, dragging, e, this.props.canMoveNode);
 
     if (newIndex) {
       index = newIndex;
-      newIndex.node.collapsed = collapsed;
       dragging.id = newIndex.id;
-    }
-
-    if (diffY < 0) {
-      // up
-      var above = tree.getNodeByTop(index.top - 1);
-      if (above) newIndex = tree.move(index.id, above.id, 'before');
-    } else if (diffY > dragging.h) {
-      // down
-      if (index.next) {
-        var below = tree.getIndex(index.next);
-        if (below.children && below.children.length && !below.node.collapsed) {
-          newIndex = tree.move(index.id, index.next, 'prepend');
-        } else {
-          newIndex = tree.move(index.id, index.next, 'after');
-        }
-      } else {
-        var below = tree.getNodeByTop(index.top + index.height);
-        if (below && below.parent !== index.id) {
-          if (below.children && below.children.length) {
-            newIndex = tree.move(index.id, below.id, 'prepend');
-          } else {
-            newIndex = tree.move(index.id, below.id, 'after');
-          }
-        }
-      }
-    }
-
-    if (newIndex) {
-      newIndex.node.collapsed = collapsed;
-      dragging.id = newIndex.id;
+      this._changed = true;
     } else {
       e.preventDefault();
     }
@@ -197,17 +158,19 @@ module.exports = React.createClass({
     });
   },
   dragEnd: function dragEnd() {
+    this.dragging = {
+      id: null,
+      x: null,
+      y: null,
+      w: null,
+      h: null
+    };
     this.setState({
-      dragging: {
-        id: null,
-        x: null,
-        y: null,
-        w: null,
-        h: null
-      }
+      dragging: this.dragging
     });
 
-    this.change(this.state.tree);
+    if (this._changed) this.change(this.state.tree);
+
     window.removeEventListener('mousemove', this.drag);
     window.removeEventListener('mouseup', this.dragEnd);
   },

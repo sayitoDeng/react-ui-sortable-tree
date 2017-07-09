@@ -1,6 +1,6 @@
 {
-  "name": "react-ui-tree",
-  "version": "2.6.0",
+  "name": "react-ui-sortable-tree",
+  "version": "2.6.1",
   "description": "React tree component",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pqx/react-ui-tree.git"
+    "url": "https://github.com/ukrbublik/react-ui-sortable-tree.git"
   },
   "keywords": [
     "react",
@@ -22,11 +22,14 @@
     "tree"
   ],
   "author": "Wang Zuo",
+  "contributors": [
+    "ukrbubik"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pqx/react-ui-tree/issues"
+    "url": "https://github.com/ukrbublik/react-ui-sortable-tree/issues"
   },
-  "homepage": "https://github.com/pqx/react-ui-tree",
+  "homepage": "https://github.com/ukrbublik/react-ui-sortable-tree",
   "peerDependencies": {
     "react": "^0.14.0 || ^15.0.0",
     "react-dom": "^0.14.0 || ^15.0.0"
