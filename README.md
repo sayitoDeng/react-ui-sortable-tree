@@ -9,7 +9,7 @@ This project was initially developed for a webpage builder. It maintains an inte
 [https://pqx.github.io/react-ui-tree](https://pqx.github.io/react-ui-tree)
 ### Installation
 ``` sh
-npm install react-ui-tree --save
+npm install react-ui-sortable-tree --save
 ```
 ### Usage
 ``` javascript
