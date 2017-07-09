@@ -220,10 +220,10 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
 
             var isInside = trg.id == index.id;
             if (!isInside) {
-              var _tmp = trg;
-              while (_tmp.parent) {
-                _tmp = _this.getIndex(_tmp.parent);
-                if (_tmp.id == index.id) {
+              var tmp = trg;
+              while (tmp.parent) {
+                tmp = _this.getIndex(tmp.parent);
+                if (tmp.id == index.id) {
                   isInside = true;
                   break;
                 }
@@ -255,7 +255,7 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
   }
 
   if (moveInfo) {
-    console.log('move', index, moveInfo);
+    //console.log('move', index, moveInfo);
     newIndex = this.move(index.id, moveInfo[1].id, moveInfo[0]);
   }
 

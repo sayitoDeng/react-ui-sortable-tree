@@ -31,9 +31,9 @@ describe('tree', function() {
     assert.strictEqual(tree.getIndex(4).left, 2);
   });
 
-  it('move()', function() {
+  /*it('move()', function() {
     tree.move();
-  });
+  });*/
 
   it('getNodeByTop()', function() {
     assert.deepEqual(tree.getNodeByTop(1).id, 1);
