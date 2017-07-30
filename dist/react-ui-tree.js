@@ -94,7 +94,8 @@ module.exports = React.createClass({
       h: dom.offsetHeight,
       x: dom.offsetLeft,
       y: dom.offsetTop,
-      treeEl: dom.closest('.m-tree')
+      treeEl: dom.closest('.m-tree'),
+      treeElContainer: dom.closest('.m-tree').parentElement
     };
 
     this._startX = dom.offsetLeft;
@@ -103,6 +104,9 @@ module.exports = React.createClass({
     this._offsetY = e.clientY;
     this._start = true;
     this._changed = false;
+
+    var tree = this.state.tree;
+    tree.onDragStart();
 
     window.addEventListener('mousemove', this.drag);
     window.addEventListener('mouseup', this.dragEnd);
@@ -121,6 +125,8 @@ module.exports = React.createClass({
     var tree = this.state.tree;
     var dragging = this.state.dragging;
     var paddingLeft = this.props.paddingLeft;
+    var treeElContainer = dragging.treeElContainer;
+    var scrolTop = treeElContainer.scrollTop;
     var newIndex = null;
     var index = tree.getIndex(dragging.id);
     if (!index) {
@@ -136,13 +142,13 @@ module.exports = React.createClass({
 
     var pos = {
       x: _startX + e.clientX - _offsetX,
-      y: _startY + e.clientY - _offsetY
+      y: _startY + e.clientY - _offsetY + scrolTop
     };
     dragging.x = pos.x;
     dragging.y = pos.y;
     dragging.paddingLeft = paddingLeft;
 
-    newIndex = tree.moveIndex(index, dragging, e, this.props.canMoveNode);
+    newIndex = tree.moveIndex(index, dragging, e, this.props.canMoveNode, this.props.canMoveToCollapaed || false);
 
     if (newIndex) {
       index = newIndex;
@@ -168,6 +174,9 @@ module.exports = React.createClass({
     this.setState({
       dragging: this.dragging
     });
+
+    var tree = this.state.tree;
+    tree.onDragEnd();
 
     if (this._changed) this.change(this.state.tree);
 

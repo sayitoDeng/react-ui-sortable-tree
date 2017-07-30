@@ -45,19 +45,23 @@ proto.updateNodesPosition = function () {
 };
 
 proto._getNodeElById = function (treeEl, indexId) {
+  var ignoreCache = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
   if (indexId == null) return null;
   if (!this._cacheEls) this._cacheEls = {};
   var el = this._cacheEls[indexId];
-  if (el && document.contains(el)) return el;
+  if (el && document.contains(el) && !ignoreCache) return el;
   el = treeEl.querySelector('.m-node[data-id="' + indexId + '"]');
   this._cacheEls[indexId] = el;
   return el;
 };
 
 proto._getDraggableNodeEl = function (treeEl) {
+  var ignoreCache = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
   if (!this._cacheEls) this._cacheEls = {};
   var el = this._cacheEls['draggable'];
-  if (el && document.contains(el)) return el;
+  if (el && document.contains(el) && !ignoreCache) return el;
   var els = treeEl.getElementsByClassName('m-draggable');
   el = els.length ? els[0] : null;
   this._cacheEls['draggable'] = el;
@@ -65,17 +69,27 @@ proto._getDraggableNodeEl = function (treeEl) {
 };
 
 proto._getPlaceholderNodeEl = function (treeEl) {
+  var ignoreCache = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
   if (!this._cacheEls) this._cacheEls = {};
   var el = this._cacheEls['placeholder'];
-  if (el && document.contains(el)) return el;
+  if (el && document.contains(el) && !ignoreCache) return el;
   var els = treeEl.getElementsByClassName('placeholder');
   el = els.length ? els[0] : null;
   this._cacheEls['placeholder'] = el;
   return el;
 };
 
+proto.onDragStart = function () {};
+
+proto.onDragEnd = function () {
+  this._cacheEls = {};
+};
+
 proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
   var _this = this;
+
+  var canMoveToCollapsed = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
 
   var newIndex = null;
   var collapsed = index.node.collapsed;
@@ -83,12 +97,19 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
 
   var moveInfo = null;
   var treeEl = dragInfo.treeEl;
+  //var treeElContainer = dragInfo.treeElContainer;
+  //var scrolTop = treeElContainer.scrollTop;
   var dragId = dragInfo.id;
   var dragEl = this._getDraggableNodeEl(treeEl);
   var plhEl = this._getPlaceholderNodeEl(treeEl);
   if (dragEl && plhEl) {
     var dragRect = dragEl.getBoundingClientRect();
     var plhRect = plhEl.getBoundingClientRect();
+    if (!plhRect.width) {
+      //todo: Bug #3: Allow append to collapsed node
+      console.log('on collapsed node! canMoveToCollapsed==true not implemented yet');
+      return;
+    }
     var dragDirs = { hrz: 0, vrt: 0 };
     if (dragRect.top < plhRect.top) dragDirs.vrt = -1; //up
     else if (dragRect.bottom > plhRect.bottom) dragDirs.vrt = +1; //down
@@ -104,7 +125,7 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
     hovMnodeEl = hovMnodeEl ? hovMnodeEl.closest('.m-node') : null;
     if (!hovMnodeEl) {
       //todo: Bug #1: handle "out of tree bounds" problem; scroll tree viewport
-      console.log('out of tree bounds');
+      console.log('out of tree bounds!');
     } else {
       var hovNodeId = hovMnodeEl.getAttribute('data-id');
       var hovInnerEls = hovMnodeEl.getElementsByClassName('inner');
@@ -178,7 +199,7 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
             if (dragDirs.vrt < 0) {
               availMoves.push(['before', trgIndex, trgIndex.lev]);
             }
-            if (trgIndex.node.leaf && dragDirs.vrt > 0) {
+            if (dragDirs.vrt > 0) {
               availMoves.push(['after', trgIndex, trgIndex.lev]);
             }
             if (!trgIndex.node.leaf && dragDirs.vrt > 0) {
@@ -217,6 +238,7 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
             var placement = am[0];
             var trg = am[1];
             if ((placement == 'before' || placement == 'after') && trg.id == 1) return false;
+            if (!canMoveToCollapsed && trg.node.collapsed && (placement == 'append' || placement == 'prepend')) return false;
 
             var isInside = trg.id == index.id;
             if (!isInside) {
