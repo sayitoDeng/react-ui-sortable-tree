@@ -6,7 +6,7 @@ Fully reworked sorting (drag-n-drop) of tree to allow control of drop (see prop 
 
 This project was initially developed for a webpage builder. It maintains an internal tree structure within the component through [js-tree](https://github.com/wangzuo/js-tree).
 ### Demo
-[https://pqx.github.io/react-ui-tree](https://pqx.github.io/react-ui-tree)
+[https://ukrbublik.github.io/react-ui-sortable-tree/](https://ukrbublik.github.io/react-ui-sortable-tree/)
 ### Installation
 ``` sh
 npm install react-ui-sortable-tree --save
