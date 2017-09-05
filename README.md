@@ -3,6 +3,7 @@ React tree component
 
 Forked from [https://github.com/pqx/react-ui-tree](https://github.com/pqx/react-ui-tree). 
 Fully reworked sorting (drag-n-drop) of tree to allow control of drop (see prop `canMoveNode`).
+Important! Add class 'm-tree-container' to html-element that holds tree AND is scrollable.
 
 This project was initially developed for a webpage builder. It maintains an internal tree structure within the component through [js-tree](https://github.com/wangzuo/js-tree).
 ### Demo
