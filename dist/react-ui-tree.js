@@ -88,8 +88,10 @@ module.exports = React.createClass({
     );
   },
   dragStart: function dragStart(id, dom, e) {
-    var treeElContainer = dom.closest('.m-tree').parentElement;
     var treeEl = dom.closest('.m-tree');
+    var treeElContainer = treeEl.closest('.m-tree-container');
+    if (!treeElContainer) treeElContainer = dom.closest('body');
+
     var scrolTop = treeElContainer.scrollTop;
     this.dragging = {
       id: id,
@@ -129,6 +131,7 @@ module.exports = React.createClass({
     var tree = this.state.tree;
     var dragging = this.state.dragging;
     var paddingLeft = this.props.paddingLeft;
+    var treeEl = dragging.treeEl;
     var treeElContainer = dragging.treeElContainer;
     var scrolTop = treeElContainer.scrollTop;
     var newIndex = null;

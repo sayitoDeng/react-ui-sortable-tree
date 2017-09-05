@@ -199,7 +199,7 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
             if (dragDirs.vrt < 0) {
               availMoves.push(['before', trgIndex, trgIndex.lev]);
             }
-            if (dragDirs.vrt > 0 && (trgIndex.node.leaf || trgIndex.node.collapsed)) {
+            if (dragDirs.vrt > 0 && (trgIndex.node.leaf || trgIndex.node.collapsed || !trgIndex.children || !trgIndex.children.length)) {
               availMoves.push(['after', trgIndex, trgIndex.lev]);
             }
             if (!trgIndex.node.leaf && dragDirs.vrt > 0) {
@@ -255,6 +255,7 @@ proto.moveIndex = function (index, dragInfo, e, canMoveFn) {
           });
 
           var bestMode = null;
+
           availMoves = availMoves.filter(function (am) {
             return _this.canMove(index.id, am[1].id, am[0], canMoveFn);
           });
