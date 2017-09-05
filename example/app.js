@@ -34,7 +34,7 @@ var App = React.createClass({
 
   render() {
     return (
-      <div className="app">
+      <div className="app m-tree-container">
         <div className="tree">
           <Tree
             paddingLeft={20}
