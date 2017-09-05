@@ -34,8 +34,8 @@ var App = React.createClass({
 
   render() {
     return (
-      <div className="app m-tree-container">
-        <div className="tree">
+      <div className="app">
+        <div className="tree m-tree-container">
           <Tree
             paddingLeft={20}
             tree={this.state.tree}
