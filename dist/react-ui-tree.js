@@ -3,14 +3,16 @@
 var React = require('react');
 var Tree = require('./tree');
 var Node = require('./node');
+var PropTypes = require('prop-types');
+var createReactClass = require('create-react-class');
 
-module.exports = React.createClass({
+module.exports = createReactClass({
   displayName: 'UITree',
 
   propTypes: {
-    tree: React.PropTypes.object.isRequired,
-    paddingLeft: React.PropTypes.number,
-    renderNode: React.PropTypes.func.isRequired
+    tree: PropTypes.object.isRequired,
+    paddingLeft: PropTypes.number,
+    renderNode: PropTypes.func.isRequired
   },
 
   getDefaultProps: function getDefaultProps() {
