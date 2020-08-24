@@ -1,16 +1,15 @@
 # react-ui-sortable-tree [![Build Status](https://travis-ci.org/ukrbublik/react-ui-sortable-tree.svg)](https://travis-ci.org/ukrbublik/react-ui-sortable-tree)
 React tree component
 
-Forked from [https://github.com/pqx/react-ui-tree](https://github.com/pqx/react-ui-tree). 
-Fully reworked sorting (drag-n-drop) of tree to allow control of drop (see prop `canMoveNode`).
-Important! Add class 'm-tree-container' to html-element that holds tree AND is scrollable.
+Forked from [https://github.com/ukrbublik/react-ui-sortable-tree](https://github.com/ukrbublik/react-ui-sortable-tree). 
+add canDrap to control drap tree (see prop `canDrap`).
+
 
 This project was initially developed for a webpage builder. It maintains an internal tree structure within the component through [js-tree](https://github.com/wangzuo/js-tree).
-### Demo
-[https://ukrbublik.github.io/react-ui-sortable-tree/](https://ukrbublik.github.io/react-ui-sortable-tree/)
+
 ### Installation
 ``` sh
-npm install react-ui-sortable-tree --save
+npm install react-ui-sortable-tree-drag --save
 ```
 ### Usage
 ``` javascript
@@ -20,6 +19,7 @@ npm install react-ui-sortable-tree --save
   onChange={this.handleChange}   // onChange(tree) tree object changed
   renderNode={this.renderNode}   // renderNode(node) return react element
   canMoveNode={this.canMoveNode} // canMoveNode(from, to, placement, parent) return bool
+  canDrag={this.canDrag}         //canDrag() return bool
 />
 
 // a sample tree object
