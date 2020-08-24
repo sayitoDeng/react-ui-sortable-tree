@@ -83,7 +83,7 @@ module.exports = createReactClass({
         index: tree.getIndex(1),
         key: 1,
         paddingLeft: this.props.paddingLeft,
-        onDragStart: this.dragStart,
+        onDragStart: this.props.canDrag?this.dragStart:null,
         onCollapse: this.toggleCollapse,
         dragging: dragging && dragging.id
       })
